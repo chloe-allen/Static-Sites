@@ -3,6 +3,7 @@ import unittest
 from textnode import TextNode, TextType
 from convert import text_to_html_node
 
+
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
         node = TextNode("This is a text node", TextType.BOLD)
@@ -50,7 +51,10 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(html_node.value, "")
         self.assertEqual(html_node.props, {"src": "www.google.com", "alt": "image"})
     
-
+class TestSplitNode(unittest.TestCase):
+    def test_single(self):
+        node = TextNode("This is text with a", TextType.BOLD, "in the middle")
+        self.assertEqual()
 
 if __name__ == "__main__":
     unittest.main()
