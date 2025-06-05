@@ -2,7 +2,7 @@ import unittest
 
 from textnode import TextNode, TextType
 from convert import text_to_html_node
-
+from splitnode import split_nodes_delimiter
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
@@ -52,9 +52,58 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(html_node.props, {"src": "www.google.com", "alt": "image"})
     
 class TestSplitNode(unittest.TestCase):
-    def test_single(self):
-        node = TextNode("This is text with a", TextType.BOLD, "in the middle")
-        self.assertEqual()
+    def test_single_delimiter(self):
+        node = TextNode("This is text with a **bolded phrase** in the middle", TextType.TEXT)
+        split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
+        self.assertEqual(split_node[0].text, "This is text with a")
+        self.assertEqual(split_node[1].text, "bolded phrase")
+        self.assertEqual(split_node[2].text, "in the middle")
+        self.assertEqual(split_node[0].text_type, TextType.TEXT)
+        self.assertEqual(split_node[1].text_type, TextType.BOLD)
+        self.assertEqual(split_node[2].text_type, TextType.TEXT)
+        self.assertEqual(len(split_node), 3)
+    def test_multiple_delimiter(self):
+        node = TextNode("This is text with a **bolded** phrase in the middle of **bolded phrase**", TextType.TEXT)
+        split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
+        self.assertEqual(split_node[0].text, "This is text with a")
+        self.assertEqual(split_node[1].text, "bolded")
+        self.assertEqual(split_node[2].text, "phrase in the middle of")
+        self.assertEqual(split_node[3].text, "bolded phrase")
+        self.assertEqual(split_node[0].text_type, TextType.TEXT)
+        self.assertEqual(split_node[1].text_type, TextType.BOLD)
+        self.assertEqual(split_node[2].text_type, TextType.TEXT)
+        self.assertEqual(split_node[3].text_type, TextType.BOLD)
+        self.assertEqual(len(split_node), 4)
+    def test_start_delimiter(self):
+        node = TextNode("**This is a bolded** phrase in the middle", TextType.TEXT)
+        split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
+        self.assertEqual(split_node[0].text, "This is a bolded")
+        self.assertEqual(split_node[1].text, "phrase in the middle")
+        self.assertEqual(split_node[0].text_type, TextType.BOLD)
+        self.assertEqual(split_node[1].text_type, TextType.TEXT)
+        self.assertEqual(len(split_node), 2)
+    def test_end_delimiter(self):
+        node = TextNode("This is a text in the **middle**", TextType.TEXT)
+        split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
+        self.assertEqual(split_node[0].text, "This is a text in the")
+        self.assertEqual(split_node[1].text, "middle")
+        self.assertEqual(split_node[0].text_type, TextType.TEXT)
+        self.assertEqual(split_node[1].text_type, TextType.BOLD)
+        self.assertEqual(len(split_node), 2)    
+    def test_no_delimiter(self):
+        node = TextNode("This is a text in the middle", TextType.TEXT)
+        split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
+        self.assertEqual(split_node[0].text, "This is a text in the middle")
+        self.assertEqual(split_node[0].text_type, TextType.TEXT)
+        self.assertEqual(len(split_node), 1)
+    def test_unbalanced_delimiter(self):
+        node = TextNode("**This is a bolded text in the middle", TextType.TEXT)
+        with self.assertRaises(ValueError):
+            split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD) 
+        
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
