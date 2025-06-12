@@ -2,7 +2,7 @@ import unittest
 
 from textnode import TextNode, TextType
 from convert import text_to_html_node
-from splitnode import split_nodes_delimiter, split_nodes_image, split_nodes_link
+from splitnode import split_nodes_delimiter, split_nodes_image, split_nodes_link, text_to_textnodes
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
@@ -55,9 +55,9 @@ class TestSplitNode(unittest.TestCase):
     def test_single_delimiter(self):
         node = TextNode("This is text with a **bolded phrase** in the middle", TextType.TEXT)
         split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
-        self.assertEqual(split_node[0].text, "This is text with a")
+        self.assertEqual(split_node[0].text, "This is text with a ")
         self.assertEqual(split_node[1].text, "bolded phrase")
-        self.assertEqual(split_node[2].text, "in the middle")
+        self.assertEqual(split_node[2].text, " in the middle")
         self.assertEqual(split_node[0].text_type, TextType.TEXT)
         self.assertEqual(split_node[1].text_type, TextType.BOLD)
         self.assertEqual(split_node[2].text_type, TextType.TEXT)
@@ -65,9 +65,9 @@ class TestSplitNode(unittest.TestCase):
     def test_multiple_delimiter(self):
         node = TextNode("This is text with a **bolded** phrase in the middle of **bolded phrase**", TextType.TEXT)
         split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
-        self.assertEqual(split_node[0].text, "This is text with a")
+        self.assertEqual(split_node[0].text, "This is text with a ")
         self.assertEqual(split_node[1].text, "bolded")
-        self.assertEqual(split_node[2].text, "phrase in the middle of")
+        self.assertEqual(split_node[2].text, " phrase in the middle of ")
         self.assertEqual(split_node[3].text, "bolded phrase")
         self.assertEqual(split_node[0].text_type, TextType.TEXT)
         self.assertEqual(split_node[1].text_type, TextType.BOLD)
@@ -78,14 +78,14 @@ class TestSplitNode(unittest.TestCase):
         node = TextNode("**This is a bolded** phrase in the middle", TextType.TEXT)
         split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
         self.assertEqual(split_node[0].text, "This is a bolded")
-        self.assertEqual(split_node[1].text, "phrase in the middle")
+        self.assertEqual(split_node[1].text, " phrase in the middle")
         self.assertEqual(split_node[0].text_type, TextType.BOLD)
         self.assertEqual(split_node[1].text_type, TextType.TEXT)
         self.assertEqual(len(split_node), 2)
     def test_end_delimiter(self):
         node = TextNode("This is a text in the **middle**", TextType.TEXT)
         split_node = split_nodes_delimiter(old_nodes=[node], delimiter="**", text_type=TextType.BOLD)
-        self.assertEqual(split_node[0].text, "This is a text in the")
+        self.assertEqual(split_node[0].text, "This is a text in the ")
         self.assertEqual(split_node[1].text, "middle")
         self.assertEqual(split_node[0].text_type, TextType.TEXT)
         self.assertEqual(split_node[1].text_type, TextType.BOLD)
@@ -148,6 +148,39 @@ class TextSplitNodesLink(unittest.TestCase):
                               TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
                               TextNode(" and another ", TextType.TEXT),
                               TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev")], new_nodes)
+
+class TextToTextnodes(unittest.TestCase):
+    def test_text_with_bold(self):
+        node = text_to_textnodes("This is **bold** text")
+        expected = [TextNode("This is ", TextType.TEXT),
+                    TextNode("bold", TextType.BOLD),
+                    TextNode(" text", TextType.TEXT)]
+        self.assertListEqual(node, expected)
+    def test_text_with_italic(self):
+        node = text_to_textnodes("This is _italic_ text")
+        expected = [TextNode("This is ", TextType.TEXT),
+                    TextNode("italic", TextType.ITALIC),
+                    TextNode(" text", TextType.TEXT)]
+        self.assertListEqual(node, expected)
+    def test_text_with_code(self):
+        node = text_to_textnodes("This is `code` text")
+        expected = [TextNode("This is ", TextType.TEXT),
+                    TextNode("code", TextType.CODE),
+                    TextNode(" text", TextType.TEXT)]
+        self.assertListEqual(node, expected)
+    def test_text_with_image(self):
+        node = text_to_textnodes("This is text with ![image](https://i.imgur.com/fJRm4Vk.jpeg)")
+        expected = [TextNode("This is text with ", TextType.TEXT),
+                    TextNode("image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg")]
+        self.assertListEqual(node, expected)
+    def test_text_with_link(self):
+        node = text_to_textnodes("This is text with [link](https://boot.dev)")
+        expected = [TextNode("This is text with ", TextType.TEXT),
+                    TextNode("link", TextType.LINK, "https://boot.dev")]
+        self.assertListEqual(node, expected)
+
+
+
 
 
 
