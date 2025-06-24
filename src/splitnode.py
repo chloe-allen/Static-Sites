@@ -69,6 +69,7 @@ def split_nodes_link(old_nodes):
 
            
 def text_to_textnodes(text):
+    text = " ".join(text.split())
     new_nodes= []
     if text != "":
         text_node = TextNode(text=text, text_type=TextType.TEXT)
