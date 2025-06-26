@@ -3,12 +3,26 @@ from blocktype import BlockType, block_to_block_type
 from htmlnode import HTMLNode, ParentNode, LeafNode
 from convert import text_to_html_node
 from splitnode import text_to_textnodes
+import shutil
+import os
 
 def main():
-    node = TextNode("This is some anchor text", TextType.LINK, "url")
-    print(node)
+    
+    recursive_copy('static', 'public')
 
-main()
+def recursive_copy(src, dst):
+    if os.path.exists(dst):
+        shutil.rmtree(dst)
+    os.mkdir(dst)
+
+    for item in os.listdir(src):
+        src_path = os.path.join(src, item)
+        dst_path = os.path.join(dst, item)
+        if os.path.isfile(src_path):
+            shutil.copy(src_path, dst_path)
+        else:
+            os.mkdir(dst_path)
+            recursive_copy(src_path, dst_path)
 
 
 def text_to_children(text):
@@ -130,3 +144,8 @@ def markdown_to_html_node(markdown):
     html_parent_node = ParentNode(tag="div", children=html_node_list)
         
     return html_parent_node
+
+
+main()
+
+
