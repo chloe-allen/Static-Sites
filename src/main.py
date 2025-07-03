@@ -5,13 +5,13 @@ from convert import text_to_html_node
 from splitnode import text_to_textnodes
 import shutil
 import os
+from pathlib import Path
 
 def main():
     
     recursive_copy('static', 'public')
-
-    generate_page("content/index.md", "template.html", "public/index.html")
-
+    generate_pages_recursive("content", "template.html", "public")
+    
 
 def recursive_copy(src, dst):
     if os.path.exists(dst):
@@ -45,6 +45,30 @@ def generate_page(from_path, template_path, dest_path):
     os.makedirs(dir_name, exist_ok=True)
     with open(dest_path, "w") as f:
         f.write(page)
+
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    with open(template_path, "r") as f:
+        template_content = f.read()
+   
+    contents = os.listdir(dir_path_content)
+    for item_name in contents:
+        isFile = os.path.isfile(os.path.join(dir_path_content, item_name))
+        if isFile is True and item_name.endswith(".md"):
+            with open(os.path.join(dir_path_content, item_name), "r") as f:
+                markdown_content = f.read()
+            markdown_html = markdown_to_html_node(markdown_content)
+            html_content = markdown_html.to_html()
+            page = template_content.replace("{{ Content }}", html_content)
+            root_ext = os.path.splitext(os.path.join(dir_path_content, item_name))
+            relative_path = os.path.relpath(root_ext[0], dir_path_content)
+            dest_file_path = os.path.join(dest_dir_path, relative_path) + ".html"
+            os.makedirs(os.path.dirname(dest_file_path), exist_ok=True)
+            with open(dest_file_path, "w") as f:
+                f.write(page)
+        elif os.path.isdir(os.path.join(dir_path_content, item_name)):
+            generate_pages_recursive(os.path.join(dir_path_content, item_name), template_path, os.path.join(dest_dir_path, item_name))
+            
 
 
 def extract_title(markdown):
