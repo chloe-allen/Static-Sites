@@ -59,14 +59,12 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
     for item_name in os.listdir(dir_path_content):
         item_path = os.path.join(dir_path_content, item_name)
         if os.path.isfile(item_path) and item_name.endswith(".md"):
-            
             root_no_ext = os.path.splitext(item_path)[0]
             relative_path = os.path.relpath(root_no_ext, "content")
             dest_path = os.path.join(dest_dir_path, relative_path) + ".html"
             generate_page(item_path, template_path, dest_path, basepath)
         elif os.path.isdir(item_path):
-            next_dest_dir = os.path.join(dest_dir_path, item_name)
-            generate_pages_recursive(item_path, template_path, next_dest_dir, basepath)
+            generate_pages_recursive(item_path, template_path, dest_dir_path, basepath)
 
 
 def extract_title(markdown):
